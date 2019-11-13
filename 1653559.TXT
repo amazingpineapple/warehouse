@@ -1,0 +1,93 @@
+1.列出不及格记录的学生
+select distinct sname as 姓名 from
+student,sc
+where  student.snum=sc.snum
+  and sc.score<60
+2.列出选修了计算机系课程的学生姓名和年龄
+select distinct sname as 姓名,year(getdate())-year(birthday)as 年龄
+  from student
+  where student.snum in 
+  (
+  select sc.snum from sc, course cr,sections ss
+   where cr.cnum=ss.cnum and
+         ss.secnum=sc.secnum and 
+		 cr.dept like '计算机系')
+3.检索了选修了数据库技术课程的学生姓名和系名
+select distinct sname as name, dept from
+student ,sc,sections ss
+where student.snum=sc.snum and
+      ss.secnum=sc.secnum and cnum='c135'
+--4.列出选修了所有课程的学生名单
+select distinct snum , sname 
+from student
+where snum in (
+select snum from sc
+ group by snum having count (*)>=(select count(*) from course))
+--5.检索每门成绩都在80分以上的学生名单
+select sname,snum
+from student
+where  snum in (select snum from sc group by snum having min(score) >=80)
+--6.检索获得奖学金的学生名单
+select sname ,snum
+from student 
+where  snum in( select snum from  sc group by snum having min(score)>=80 and avg(score)>=90)
+--7.检索选修了大学英语的学生名单，并按成绩从高到低排列
+select distinct sname ,score
+from  student ,sc
+where student.snum=sc.snum and 
+      (sc.secnum='11601' or sc.secnum='11602')
+ order by score desc
+--8.统计每门课程的选修人数，输出列名为课程号，人数
+select distinct cnum as 课程号,count (cnum) as 人数
+from   	
+    sc,sections ss
+	where sc.secnum=ss.secnum
+	group by cnum
+--9.查询选修了数据库技术，没有选修高等数学的学生姓名和系别
+select sname ,dept
+from student st,sc,sections  ss
+where sc.secnum=ss.secnum and cnum='c130'
+     and st.snum=sc.snum
+except ( select sname, dept from student st,sc,sections where sc.secnum=sections.secnum and cnum='c120' 
+          and st.snum=sc.snum)
+--10.检索使用高等教育出版社出版的教材的课程名
+select cname from
+course
+where right(textbook,7) like '高等教育出版社'
+--11.统计所有课程的最高成绩，最低成绩和平均成绩
+select ss.cnum, max(score) as 最高成绩,min(score) as 最低成绩,avg(score) as 平均成绩
+from sc,sections ss,course cr
+where sc.secnum=ss.secnum and cr.cnum=ss.cnum
+group by ss.cnum
+--12.统计每门课程的选课人数及不及格人数。
+select cnum ,count(*) as 选课人数 ,sum(1-score/60) as 不及格人数
+from  sc,sections ss
+where   ss.secnum=sc.secnum
+group by cnum
+--13.查询土木工程系，交通工程系和城市规划系的学生学号和姓名
+select snum ,sname 
+from student
+where dept in('土木工程','交通工程','城市规划')
+--14.查询选修了数据库技术或选修了多媒体的学生学号
+select  distinct sc.snum 
+from  sc,sections
+where sc.secnum=sections.secnum and cnum='c130'
+union select distinct sc.snum 
+ from sc,sections
+ where sc.secnum=sections.secnum and cnum='c132'
+--15.查询计算机系年龄不大于24岁的学生信息
+select distinct snum ,sname ,sex ,dept ,year(getdate())-year(birthday) as age
+from student 
+except
+(select distinct snum,sname,sex ,dept,year(getdate())-year(birthday)as age
+from student 
+where  year(getdate())-year(birthday)>24)
+--16.查询计算机系年龄大于24岁的学生信息
+select distinct snum ,sname ,sex ,dept ,year(getdate())-year(birthday) as age
+from student 
+except
+(select distinct snum,sname,sex ,dept,year(getdate())-year(birthday)as age
+from student 
+where  year(getdate())-year(birthday)<=24)
+
+  
